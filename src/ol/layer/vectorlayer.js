@@ -333,16 +333,6 @@ ol.layer.Vector.prototype.groupFeaturesBySymbolizerLiteral =
 
 
 /**
- * @param {string|number} uid Feature uid.
- * @return {ol.Feature|undefined} The feature with the provided uid if it is on
- *     the layer, otherwise undefined.
- */
-ol.layer.Vector.prototype.getFeatureWithUid = function(uid) {
-  return this.featureCache_.getFeatureWithUid(/** @type {string} */ (uid));
-};
-
-
-/**
  * @param {Object|Element|Document|string} data Feature data.
  * @param {ol.parser.Parser} parser Feature parser.
  * @param {ol.proj.Projection} projection This sucks.  The layer should be a
