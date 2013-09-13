@@ -76,6 +76,23 @@ ol.coordinate.degreesToStringHDMS_ = function(degrees, hemispheres) {
 
 
 /**
+ * @param {ol.Coordinate} coordinate1 First coordinate.
+ * @param {ol.Coordinate} coordinate2 Second coordinate.
+ * @return {boolean} Whether the passed coordinates are equal.
+ */
+ol.coordinate.equals = function(coordinate1, coordinate2) {
+  var equals = true;
+  for (var i = coordinate1.length - 1; i >= 0; --i) {
+    if (coordinate1[i] != coordinate2[i]) {
+      equals = false;
+      break;
+    }
+  }
+  return equals;
+};
+
+
+/**
  * @param {ol.Coordinate} coordinate Coordinate.
  * @param {number} angle Angle.
  * @return {ol.Coordinate} Coordinate.
