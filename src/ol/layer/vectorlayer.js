@@ -167,7 +167,16 @@ ol.layer.Vector = function(options) {
    * @type {boolean}
    * @private
    */
-  this.temp_ = false;
+  this.temporary_ = false;
+
+  /**
+   * @private
+   * @type {{rTree: ol.structs.RTree, vertexFeature: ol.Feature}}
+   */
+  this.editData_ = {
+    rTree: null,
+    vertexFeature: null
+  };
 
 };
 goog.inherits(ol.layer.Vector, ol.layer.Layer);
@@ -231,7 +240,15 @@ ol.layer.Vector.prototype.clear = function() {
  * @return {boolean} Whether this layer is temporary.
  */
 ol.layer.Vector.prototype.getTemporary = function() {
-  return this.temp_;
+  return this.temporary_;
+};
+
+
+/**
+ * @return {{rTree: ol.structs.RTree}} Edit data.
+ */
+ol.layer.Vector.prototype.getEditData = function() {
+  return this.editData_;
 };
 
 
@@ -439,10 +456,30 @@ ol.layer.Vector.prototype.setRenderIntent =
 
 
 /**
- * @param {boolean} temp Whether this layer is temporary.
+ * @param {boolean} temporary Whether this layer is temporary.
  */
-ol.layer.Vector.prototype.setTemporary = function(temp) {
-  this.temp_ = temp;
+ol.layer.Vector.prototype.setTemporary = function(temporary) {
+  this.temporary_ = temporary;
+};
+
+
+/**
+ * TODO: This should go away - features should either fire events when changed,
+ * or feature changes should be made through the layer.
+ *
+ * @param {Array.<ol.Feature>} features Features.
+ */
+ol.layer.Vector.prototype.updateFeatures = function(features) {
+  var extent = ol.extent.createEmpty();
+  for (var i = features.length - 1; i >= 0; --i) {
+    var feature = features[i];
+    var geometry = feature.getGeometry();
+    this.featureCache_.remove(feature);
+    this.featureCache_.add(feature);
+    ol.extent.extend(extent, geometry.getBounds());
+  }
+  this.dispatchEvent(new ol.layer.VectorEvent(
+      ol.layer.VectorLayerEventType.CHANGE, features, [extent]));
 };
 
 
