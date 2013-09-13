@@ -133,6 +133,45 @@ ol.coordinate.squaredDistance = function(coord1, coord2) {
 
 
 /**
+ * @param {ol.Coordinate} coordinate The coordinate.
+ * @param {Array.<ol.Coordinate>} segment The two coordinates of the segment.
+ * @return {Array} An array compatible with ol.Coordinate, but with 4 vaules:
+ *     [0] x-coordinate of the point closest to the given point on the segment;
+ *     [1] y-coordinate of the point closest to the given point on the segment;
+ *     [2] squared distance between given point and segment;
+ *     [3] describes how far between the two segment points the given point is.
+ */
+ol.coordinate.closestOnSegment = function(coordinate, segment) {
+  var x0 = coordinate[0];
+  var y0 = coordinate[1];
+  var start = segment[0];
+  var end = segment[1];
+  var x1 = start[0];
+  var y1 = start[1];
+  var x2 = end[0];
+  var y2 = end[1];
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+  var along = (dx == 0 && dy == 0) ? 0 :
+      ((dx * (x0 - x1)) + (dy * (y0 - y1))) / ((dx * dx + dy * dy) || 0);
+  var x, y;
+  if (along <= 0) {
+    x = x1;
+    y = y1;
+  } else if (along >= 1) {
+    x = x2;
+    y = y2;
+  } else {
+    x = x1 + along * dx;
+    y = y1 + along * dy;
+  }
+  var xDist = x - x0;
+  var yDist = y - y0;
+  return [x, y, xDist * xDist + yDist * yDist, along];
+};
+
+
+/**
  * @param {ol.Coordinate|undefined} coordinate Coordinate.
  * @return {string} Hemisphere, degrees, minutes and seconds.
  * @todo stability experimental
