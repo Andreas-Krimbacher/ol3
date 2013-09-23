@@ -70,8 +70,9 @@ goog.inherits(ol.interaction.Modify, ol.interaction.Drag);
 
 /**
  * @param {ol.layer.VectorLayerEventObject} evt Event object.
+ * @private
  */
-ol.interaction.Modify.prototype.addIndex = function(evt) {
+ol.interaction.Modify.prototype.addIndex_ = function(evt) {
   var layer = evt.target;
   var features = evt.features;
   for (var i = 0, ii = features.length; i < ii; ++i) {
@@ -104,11 +105,11 @@ ol.interaction.Modify.prototype.addLayer = function(layer) {
     selectionLayer.addFeatures([vertexFeature]);
     editData.vertexFeature = vertexFeature;
   }
-  this.addIndex(/** @type {ol.layer.VectorLayerEventObject} */
+  this.addIndex_(/** @type {ol.layer.VectorLayerEventObject} */
       ({target: selectionLayer, features: goog.object.getValues(
           selectionData.selectedFeaturesByFeatureUid)}));
   goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.ADD,
-      this.addIndex, false, this);
+      this.addIndex_, false, this);
   goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.REMOVE,
       this.removeIndex, false, this);
 };
@@ -271,7 +272,7 @@ ol.interaction.Modify.prototype.handleMouseMove_ = function(evt) {
     var selectionLayer = layer.getSelectionData().layer;
     if (!goog.isNull(selectionLayer)) {
       if (goog.isNull(goog.events.getListener(selectionLayer,
-          ol.layer.VectorLayerEventType.ADD, this.addIndex, false, this))) {
+          ol.layer.VectorLayerEventType.ADD, this.addIndex_, false, this))) {
         this.addLayer(layer);
       }
       var editData = selectionLayer.getEditData();
