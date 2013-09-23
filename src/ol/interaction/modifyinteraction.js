@@ -120,7 +120,7 @@ ol.interaction.Modify.prototype.addLayer = function(layer) {
   goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.ADD,
       this.handleFeaturesAdded_, false, this);
   goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.REMOVE,
-      this.removeIndex, false, this);
+      this.handleFeaturesRemoved_, false, this);
 };
 
 
@@ -385,9 +385,11 @@ ol.interaction.Modify.prototype.insertVertex_ =
 
 
 /**
+ * Listen for feature removals.
  * @param {ol.layer.VectorLayerEventObject} evt Event object.
+ * @private
  */
-ol.interaction.Modify.prototype.removeIndex = function(evt) {
+ol.interaction.Modify.prototype.handleFeaturesRemoved_ = function(evt) {
   var layer = evt.target;
   var rTree = layer.getEditData().rTree;
   var features = evt.features;
