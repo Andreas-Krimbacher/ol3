@@ -301,21 +301,24 @@ ol.interaction.Modify.prototype.handleMouseMove_ = function(evt) {
         var geometry = vertexFeature.getGeometry();
         var vertex = /** @type {ol.Coordinate} */
             (ol.coordinate.closestOnSegment(pixelCoordinate, segment));
-        var coordPixel = map.getPixelFromCoordinate(vertex);
-        var pixel1 = map.getPixelFromCoordinate(segment[0]);
-        var pixel2 = map.getPixelFromCoordinate(segment[1]);
-        var squaredDist1 = ol.coordinate.squaredDistance(coordPixel, pixel1);
-        var squaredDist2 = ol.coordinate.squaredDistance(coordPixel, pixel2);
-        var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
-        renderIntent = ol.layer.VectorLayerRenderIntent.FUTURE;
-        if (dist <= 10) {
-          vertex = squaredDist1 > squaredDist2 ? segment[1] : segment[0];
-          renderIntent = ol.layer.VectorLayerRenderIntent.TEMPORARY;
+        var vertexPixel = map.getPixelFromCoordinate(vertex);
+        if (Math.sqrt(ol.coordinate.squaredDistance(pixel, vertexPixel)) <=
+            this.pixelTolerance_) {
+          var pixel1 = map.getPixelFromCoordinate(segment[0]);
+          var pixel2 = map.getPixelFromCoordinate(segment[1]);
+          var squaredDist1 = ol.coordinate.squaredDistance(vertexPixel, pixel1);
+          var squaredDist2 = ol.coordinate.squaredDistance(vertexPixel, pixel2);
+          var dist = Math.sqrt(Math.min(squaredDist1, squaredDist2));
+          renderIntent = ol.layer.VectorLayerRenderIntent.FUTURE;
+          if (dist <= 10) {
+            vertex = squaredDist1 > squaredDist2 ? segment[1] : segment[0];
+            renderIntent = ol.layer.VectorLayerRenderIntent.TEMPORARY;
+          }
+          geometry.set(0, vertex[0]);
+          geometry.set(1, vertex[1]);
+          selectionLayer.updateFeatures([vertexFeature]);
+          this.modifiable_ = true;
         }
-        geometry.set(0, vertex[0]);
-        geometry.set(1, vertex[1]);
-        selectionLayer.updateFeatures([vertexFeature]);
-        this.modifiable_ = true;
       }
       if (vertexFeature.renderIntent != renderIntent) {
         selectionLayer.setRenderIntent(renderIntent, [vertexFeature]);
