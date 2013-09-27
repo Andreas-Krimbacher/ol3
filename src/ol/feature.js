@@ -43,6 +43,13 @@ ol.Feature = function(opt_values) {
   this.geometryName_;
 
   /**
+   * Original of this feature when it was modified.
+   * @type {ol.Feature}
+   * @private
+   */
+  this.original_ = null;
+
+  /**
    * The render intent for this feature.
    * @type {ol.layer.VectorLayerRenderIntent|string}
    */
@@ -97,6 +104,15 @@ ol.Feature.prototype.getGeometry = function() {
   return goog.isDef(this.geometryName_) ?
       /** @type {ol.geom.Geometry} */ (this.get(this.geometryName_)) :
       null;
+};
+
+
+/**
+ * Get the original of this feature when it was modified.
+ * @return {ol.Feature} Original.
+ */
+ol.Feature.prototype.getOriginal = function() {
+  return this.original_;
 };
 
 
@@ -172,6 +188,15 @@ ol.Feature.prototype.setGeometry = function(geometry) {
     this.geometryName_ = ol.Feature.DEFAULT_GEOMETRY;
   }
   this.set(this.geometryName_, geometry);
+};
+
+
+/**
+ * Set the original of this feature when it was modified.
+ * @param {ol.Feature} original Original.
+ */
+ol.Feature.prototype.setOriginal = function(original) {
+  this.original_ = original;
 };
 
 

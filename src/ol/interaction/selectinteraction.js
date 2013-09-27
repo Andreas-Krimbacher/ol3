@@ -59,6 +59,7 @@ ol.interaction.Select.prototype.addToSelectionData =
   var selectedFeature = new ol.Feature(feature.getAttributes());
   selectedFeature.setGeometry(feature.getGeometry().clone());
   selectedFeature.setId(feature.getId());
+  selectedFeature.setOriginal(feature.getOriginal());
   selectedFeature.setSymbolizers(feature.getSymbolizers());
   selectedFeature.renderIntent = ol.layer.VectorLayerRenderIntent.SELECTED;
   selectionData.featuresBySelectedFeatureUid[goog.getUid(selectedFeature)] =
@@ -152,12 +153,14 @@ ol.interaction.Select.prototype.select =
         selectionData.featuresBySelectedFeatureUid;
     var previouslySelected = {};
     goog.object.extend(previouslySelected, selectedFeaturesByFeatureUid);
-    var feature, featureId;
+    var feature, featureId, selectedFeature;
     if (clear) {
       for (var f in featuresBySelectedFeatureUid) {
         feature = featuresBySelectedFeatureUid[f];
-        unselectedFeatures.push(feature);
-        featuresToRemove.push(this.removeFromSelectionData(layer, feature));
+        selectedFeature = this.removeFromSelectionData(layer, feature);
+        unselectedFeatures.push(
+            this.updateFeature(layer, feature, selectedFeature));
+        featuresToRemove.push(selectedFeature);
       }
     }
     for (var j = 0; j < numFeatures; ++j) {
@@ -166,8 +169,10 @@ ol.interaction.Select.prototype.select =
       var clone = selectedFeaturesByFeatureUid[featureId];
       if (clone) {
         // TODO: make toggle configurable
-        unselectedFeatures.push(feature);
-        featuresToRemove.push(this.removeFromSelectionData(layer, feature));
+        selectedFeature = this.removeFromSelectionData(layer, feature);
+        unselectedFeatures.push(
+            this.updateFeature(layer, feature, selectedFeature));
+        featuresToRemove.push(selectedFeature);
       } else if (!(featureId in previouslySelected)) {
         selectedFeatures.push(feature);
         featuresToAdd.push(this.addToSelectionData(layer, feature));
@@ -181,9 +186,32 @@ ol.interaction.Select.prototype.select =
     }
     selectionLayer.removeFeatures(featuresToRemove);
     selectionLayer.addFeatures(featuresToAdd);
-    if (goog.object.getCount(selectedFeaturesByFeatureUid) == 0) {
+    if (goog.object.getCount(selectedFeaturesByFeatureUid) === 0) {
       map.removeLayer(selectionLayer);
     }
     // TODO: Dispatch an event with selectedFeatures and unselectedFeatures
   }
+};
+
+
+/**
+ * Updates a feature on the source layer if the selected feature was modidied.
+ * TODO: This should probably be done in a separate Save Manager instead.
+ *
+ * @param {ol.layer.Layer} layer Layer.
+ * @param {ol.Feature} feature Feature on the source layer.
+ * @param {ol.Feature} selectedFeature Selected feature on selection layer.
+ * @return {ol.Feature} The updated feature.
+ */
+ol.interaction.Select.prototype.updateFeature =
+    function(layer, feature, selectedFeature) {
+  var original = selectedFeature.getOriginal();
+  if (!goog.isNull(original) && selectedFeature !== feature.getOriginal()) {
+    if (layer instanceof ol.layer.Vector) {
+      layer.removeFeatures([feature]);
+      layer.addFeatures([selectedFeature]);
+    }
+    feature = selectedFeature;
+  }
+  return feature;
 };
