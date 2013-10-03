@@ -1,6 +1,7 @@
 goog.provide('ol.interaction.Modify');
 
 goog.require('goog.array');
+goog.require('goog.asserts');
 goog.require('goog.events');
 goog.require('goog.object');
 goog.require('ol.Feature');
@@ -15,7 +16,7 @@ goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
 goog.require('ol.interaction.Drag');
 goog.require('ol.layer.Vector');
-goog.require('ol.layer.VectorLayerEventType');
+goog.require('ol.layer.VectorEventType');
 goog.require('ol.layer.VectorLayerRenderIntent');
 goog.require('ol.structs.RTree');
 
@@ -91,11 +92,12 @@ ol.interaction.Modify.prototype.addIndex_ = function(layer, features) {
 
 /**
  * Listen for feature additions.
- * @param {ol.layer.VectorLayerEventObject} evt Event object.
+ * @param {ol.layer.VectorEvent} evt Event object.
  * @private
  */
 ol.interaction.Modify.prototype.handleFeaturesAdded_ = function(evt) {
-  this.addIndex_(evt.target, evt.features);
+  goog.asserts.assertInstanceof(evt.target, ol.layer.Vector);
+  this.addIndex_(/** @type {ol.layer.Vector} */ (evt.target), evt.features);
 };
 
 
@@ -117,9 +119,9 @@ ol.interaction.Modify.prototype.addLayer = function(layer) {
   this.addIndex_(selectionLayer,
       goog.object.getValues(selectionData.selectedFeaturesByFeatureUid));
 
-  goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.ADD,
+  goog.events.listen(selectionLayer, ol.layer.VectorEventType.ADD,
       this.handleFeaturesAdded_, false, this);
-  goog.events.listen(selectionLayer, ol.layer.VectorLayerEventType.REMOVE,
+  goog.events.listen(selectionLayer, ol.layer.VectorEventType.REMOVE,
       this.handleFeaturesRemoved_, false, this);
 };
 
@@ -158,9 +160,10 @@ ol.interaction.Modify.prototype.addSegments_ =
       rTree.insert(ol.extent.boundingExtent(segment), segmentData, uid);
     }
   } else if (geometry instanceof ol.geom.Polygon) {
-    for (var j = 0, jj = geometry.rings.length; j < jj; ++j) {
-      this.addSegments_(selectionLayer, feature, geometry.rings[j],
-          [geometry.rings, j]);
+    var rings = geometry.getRings();
+    for (var j = 0, jj = rings.length; j < jj; ++j) {
+      this.addSegments_(selectionLayer, feature, rings[j],
+          [rings, j]);
     }
   }
 };
@@ -226,10 +229,10 @@ ol.interaction.Modify.prototype.handleDrag = function(evt) {
     var segmentData = dragSegment[1];
     var feature = segmentData[1];
     var geometry = segmentData[2];
+    var coordinates = geometry.getCoordinates();
     var index = dragSegment[2];
-    geometry.set(segmentData[3] + index, 0, vertex[0]);
-    geometry.set(segmentData[3] + index, 1, vertex[1]);
-    feature.getGeometry().invalidateBounds();
+    coordinates[segmentData[3] + index] = vertex;
+    geometry.setCoordinates(coordinates);
 
     var editData = selectionLayer.getEditData();
     var vertexFeature = editData.vertexFeature;
@@ -237,12 +240,9 @@ ol.interaction.Modify.prototype.handleDrag = function(evt) {
     var segment = segmentData[0];
     editData.rTree.remove(ol.extent.boundingExtent(segment), segmentData);
     segment[index] = vertex;
-    vertexGeometry.set(0, vertex[0]);
-    vertexGeometry.set(1, vertex[1]);
+    vertexGeometry.setCoordinates(vertex);
     editData.rTree.insert(ol.extent.boundingExtent(segment), segmentData,
         goog.getUid(feature));
-
-    selectionLayer.updateFeatures([feature, vertexFeature]);
   }
 };
 
@@ -293,7 +293,7 @@ ol.interaction.Modify.prototype.handleMouseMove_ = function(evt) {
     var selectionLayer = layer.getSelectionData().layer;
     if (!goog.isNull(selectionLayer)) {
       var listener = goog.events.getListener(selectionLayer,
-          ol.layer.VectorLayerEventType.ADD,
+          ol.layer.VectorEventType.ADD,
           this.handleFeaturesAdded_, false, this);
       if (goog.isNull(listener)) {
         this.addLayer(layer);
@@ -321,9 +321,7 @@ ol.interaction.Modify.prototype.handleMouseMove_ = function(evt) {
             vertex = squaredDist1 > squaredDist2 ? segment[1] : segment[0];
             renderIntent = ol.layer.VectorLayerRenderIntent.TEMPORARY;
           }
-          geometry.set(0, vertex[0]);
-          geometry.set(1, vertex[1]);
-          selectionLayer.updateFeatures([vertexFeature]);
+          geometry.setCoordinates(vertex);
           this.modifiable_ = true;
         }
       }
@@ -401,7 +399,7 @@ ol.interaction.Modify.prototype.insertVertex_ =
 
 /**
  * Listen for feature removals.
- * @param {ol.layer.VectorLayerEventObject} evt Event object.
+ * @param {ol.layer.VectorEvent} evt Event object.
  * @private
  */
 ol.interaction.Modify.prototype.handleFeaturesRemoved_ = function(evt) {

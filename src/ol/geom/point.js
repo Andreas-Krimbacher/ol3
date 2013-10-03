@@ -103,20 +103,3 @@ ol.geom.Point.prototype.transform = function(transform) {
 ol.geom.Point.prototype.invalidateBounds = function() {
   this.bounds_ = null;
 };
-
-
-/**
- * @param {number} dim Coordinate dimension.
- * @param {number} value The coordinate value.
- */
-ol.geom.Point.prototype.set = function(dim, value) {
-  // this.invalidateBounds();
-  // TODO: We should be able to call invalidateBounds here.  Currently we
-  // cannot because the modify interaction adds a feature with NaN bounds and
-  // then relies on those same bounds being updated in place.
-  if (!goog.isNull(this.bounds_) && dim <= 1) {
-    this.bounds_[dim] = value;
-    this.bounds_[dim + 2] = value;
-  }
-  this.vertices.set(this.sharedId_, 0, dim, value);
-};

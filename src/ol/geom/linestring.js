@@ -5,7 +5,6 @@ goog.require('goog.events.EventType');
 goog.require('ol.CoordinateArray');
 goog.require('ol.coordinate');
 goog.require('ol.extent');
-goog.require('ol.geom');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryEvent');
 goog.require('ol.geom.GeometryType');
@@ -136,15 +135,4 @@ ol.geom.LineString.prototype.transform = function(transform) {
     transform(coord, coord, coord.length);
   }
   this.setCoordinates(coordinates); // for change event
-};
-
-
-/**
- * @param {number} index Vertex index.
- * @param {number} dim Coordinate dimension.
- * @param {number} value The coordinate value.
- */
-ol.geom.LineString.prototype.set = function(index, dim, value) {
-  this.invalidateBounds();
-  this.vertices.set(this.sharedId_, index, dim, value);
 };
