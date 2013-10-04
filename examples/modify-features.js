@@ -48,7 +48,8 @@ var vector = new ol.layer.Vector({
               color: '#0033ff',
               opacity: 1
             }),
-            size: 16
+            size: 16,
+            zIndex: 1
           })
         ]
       }),
@@ -60,7 +61,8 @@ var vector = new ol.layer.Vector({
               color: '#00ff33',
               opacity: 1
             }),
-            size: 16
+            size: 16,
+            zIndex: 1
           })
         ]
       })
